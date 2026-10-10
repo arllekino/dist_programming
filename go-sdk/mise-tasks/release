@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+version="${1:-}"
+version="${version#v}"
+
+if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+  echo "usage: mise run release -- <major.minor.patch>" >&2
+  exit 2
+fi
+
+if [[ "$(git branch --show-current)" != "main" ]]; then
+  echo "release must run from the main branch" >&2
+  exit 1
+fi
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "release requires a clean working tree" >&2
+  exit 1
+fi
+
+git fetch origin main --tags
+
+if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
+  echo "local main must match origin/main" >&2
+  exit 1
+fi
+
+module_files=()
+while IFS= read -r module_file; do
+  module_files+=("$module_file")
+done < <(git ls-files 'go.mod' '*/go.mod' | sort)
+if ((${#module_files[@]} == 0)); then
+  echo "no Go modules found" >&2
+  exit 1
+fi
+
+tags=()
+for module_file in "${module_files[@]}"; do
+  module_dir="$(dirname "$module_file")"
+  if [[ "$module_dir" == "." ]]; then
+    tag="v${version}"
+  else
+    tag="${module_dir}/v${version}"
+  fi
+  if git rev-parse --verify --quiet "refs/tags/${tag}" >/dev/null; then
+    echo "tag already exists: ${tag}" >&2
+    exit 1
+  fi
+  tags+=("$tag")
+done
+
+mise run all
+
+sdk="github.com/distributed-programming-2026/go-sdk"
+for module_file in "${module_files[@]}"; do
+  module_dir="$(dirname "$module_file")"
+  while read -r dependency; do
+    [[ "$dependency" == "$sdk"/* ]] || continue
+    (
+      cd "$module_dir"
+      GOWORK=off go mod edit -require="${dependency}@v${version}"
+    )
+  done < <(
+    cd "$module_dir"
+    GOWORK=off go mod edit -json | awk '
+      /"Require": \[/ { in_require = 1; next }
+      in_require && /^[[:space:]]*]/ { exit }
+      in_require && /"Path":/ {
+        dependency = $0
+        sub(/^[^:]*:[[:space:]]*"/, "", dependency)
+        sub(/"[,]?$/, "", dependency)
+        print dependency
+      }
+    '
+  )
+done
+
+for module_file in "${module_files[@]}"; do
+  git add "$module_file"
+  module_sum="${module_file%.mod}.sum"
+  [[ -f "$module_sum" ]] && git add "$module_sum"
+done
+git commit -m "release: v${version}"
+
+for tag in "${tags[@]}"; do
+  git tag -a "$tag" -m "Release ${tag}"
+done
+
+git push --atomic origin main "${tags[@]}"
+
+# Internal module checksums cannot be calculated until their new tags are
+# published. Refresh them directly from GitHub after publishing the release so
+# a subsequent `mise run all` leaves the repository clean.
+for module_file in "${module_files[@]}"; do
+  module_dir="$(dirname "$module_file")"
+  (
+    cd "$module_dir"
+    GONOSUMDB="${sdk}/*" GOPROXY=direct GOWORK=off go mod tidy
+  )
+done
+
+for module_file in "${module_files[@]}"; do
+  git add "$module_file"
+  module_sum="${module_file%.mod}.sum"
+  [[ -f "$module_sum" ]] && git add "$module_sum"
+done
+
+if ! git diff --cached --quiet; then
+  git commit -m "chore: refresh checksums for v${version}"
+  git push origin main
+fi
