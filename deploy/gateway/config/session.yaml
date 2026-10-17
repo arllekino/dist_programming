@@ -1,0 +1,6 @@
+kind: gateway/service/v1
+name: session
+interceptor:
+  address: session-service:8081
+  transport: grpc
+  timeout: 3s

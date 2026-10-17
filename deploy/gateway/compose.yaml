@@ -1,0 +1,18 @@
+services:
+  gateway:
+    image: distributed-programming-gateway:local
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "${LOCAL_GATEWAY_PORT:-8000}:8000"
+      - "${LOCAL_GATEWAY_HEALTH_PORT:-15000}:15000"
+    volumes:
+      - ./deploy/gateway/config:/config:ro
+    depends_on:
+      auth-service:
+        condition: service_started
+      identity-service:
+        condition: service_started
+      session-service:
+        condition: service_started

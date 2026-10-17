@@ -1,0 +1,87 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Identity service public API
+  x-api-identifier: identitypublicapi
+paths:
+  /api/public/v1/users/me:
+    parameters:
+      - $ref: "#/components/parameters/authUser"
+    get:
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+        "404":
+          description: User not found
+    put:
+      operationId: updateCurrentUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/profile"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+        "400":
+          description: Invalid profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        "404":
+          description: User not found
+components:
+  parameters:
+    authUser:
+      name: X-Auth-User
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    profile:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+      required:
+        - firstName
+        - lastName
+        - email
+    user:
+      type: object
+      properties:
+        id:
+          type: string
+        profile:
+          $ref: "#/components/schemas/profile"
+        status:
+          type: string
+          enum: [active, blocked]
+      required:
+        - id
+        - profile
+        - status
+    error:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message

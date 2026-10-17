@@ -1,0 +1,51 @@
+syntax = "proto3";
+package sessionInternalAPI;
+
+option go_package = "/.;sessionapi";
+
+service SessionService {
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc RevokeUserSessions(RevokeUserSessionsRequest) returns (RevokeUserSessionsResponse);
+}
+
+message CreateSessionRequest {
+  string UserID = 1;
+  string UserAgent = 2;
+}
+
+message CreateSessionResponse {
+  string Token = 1;
+  string SessionID = 2;
+  int64 ExpiresAt = 3;
+}
+
+message ValidateSessionRequest {
+  string Token = 1;
+}
+
+message ValidateSessionResponse {
+  string UserID = 1;
+  string SessionID = 2;
+  int64 ExpiresAt = 3;
+}
+
+message RevokeSessionRequest {
+  string Token = 1;
+}
+
+message RevokeSessionResponse {
+  string UserID = 1;
+  string SessionID = 2;
+}
+
+message RevokeUserSessionsRequest {
+  string UserID = 1;
+  string ExceptSessionID = 2;
+  int64 CreatedBefore = 3;
+}
+
+message RevokeUserSessionsResponse {
+  int32 Revoked = 1;
+}

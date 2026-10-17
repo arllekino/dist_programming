@@ -1,0 +1,15 @@
+kind: gateway/service/v1
+name: auth
+weight: 100
+routes:
+  - pattern: '^/api/public/v1/(register|login)$'
+    target: auth-service:8082
+    allowedMethods: [POST]
+
+  - pattern: '^/api/public/v1/(logout|password)$'
+    target: auth-service:8082
+    allowedMethods: [POST]
+    interceptors:
+      - id: session
+        parameters:
+          keepAuthorization: 'true'

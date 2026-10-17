@@ -1,0 +1,30 @@
+syntax = "proto3";
+package identityInternalAPI;
+
+option go_package = "/.;identityinternalapi";
+
+service IdentityService {
+  rpc CreateUser(CreateUserRequest) returns (User);
+  rpc GetUser(GetUserRequest) returns (User);
+}
+
+message CreateUserRequest {
+  string UserID = 1;
+  Profile Profile = 2;
+}
+
+message GetUserRequest {
+  string UserID = 1;
+}
+
+message Profile {
+  string FirstName = 1;
+  string LastName = 2;
+  string Email = 3;
+}
+
+message User {
+  string UserID = 1;
+  Profile Profile = 2;
+  string Status = 3;
+}

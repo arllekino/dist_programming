@@ -1,0 +1,10 @@
+syntax = "proto3";
+package authEvents;
+
+option go_package = "/.;authevents";
+
+message PasswordChanged {
+  string UserID = 1;
+  int64 ChangedAt = 2;
+  string KeepSessionID = 3;
+}

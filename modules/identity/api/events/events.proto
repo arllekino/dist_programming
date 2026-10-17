@@ -1,0 +1,12 @@
+syntax = "proto3";
+package identityEvents;
+
+option go_package = "/.;identityevents";
+
+message UserCreated {
+  string UserID = 1;
+}
+
+message UserProfileUpdated {
+  string UserID = 1;
+}
