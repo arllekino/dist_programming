@@ -25,7 +25,7 @@ func (h handler) Register(ctx context.Context, req publicapi.RegisterRequestObje
 		LastName:  req.Body.Profile.LastName,
 		Email:     req.Body.Profile.Email,
 	}
-	result, err := h.svc.Register(ctx, req.Body.Login, req.Body.Password, profile, metaFrom(ctx).userAgent)
+	result, err := h.svc.Register(ctx, req.Body.Login, req.Body.Password, profile)
 	switch {
 	case isValidationError(err):
 		return publicapi.Register400JSONResponse(errorBody(err)), nil
@@ -46,7 +46,7 @@ func (h handler) Register(ctx context.Context, req publicapi.RegisterRequestObje
 }
 
 func (h handler) Login(ctx context.Context, req publicapi.LoginRequestObject) (publicapi.LoginResponseObject, error) {
-	session, err := h.svc.Login(ctx, req.Body.Login, req.Body.Password, metaFrom(ctx).userAgent)
+	session, err := h.svc.Login(ctx, req.Body.Login, req.Body.Password)
 	switch {
 	case errors.Is(err, domain.ErrInvalidCredentials):
 		return publicapi.Login401JSONResponse(errorBody(domain.ErrInvalidCredentials)), nil
@@ -59,7 +59,7 @@ func (h handler) Login(ctx context.Context, req publicapi.LoginRequestObject) (p
 }
 
 func (h handler) Logout(ctx context.Context, _ publicapi.LogoutRequestObject) (publicapi.LogoutResponseObject, error) {
-	err := h.svc.Logout(ctx, metaFrom(ctx).token)
+	err := h.svc.Logout(ctx, bearerToken(ctx))
 	switch {
 	case errors.Is(err, app.ErrUnauthenticated):
 		return publicapi.Logout401JSONResponse(errorBody(err)), nil
@@ -72,7 +72,7 @@ func (h handler) Logout(ctx context.Context, _ publicapi.LogoutRequestObject) (p
 }
 
 func (h handler) ChangePassword(ctx context.Context, req publicapi.ChangePasswordRequestObject) (publicapi.ChangePasswordResponseObject, error) {
-	err := h.svc.ChangePassword(ctx, metaFrom(ctx).token, req.Body.OldPassword, req.Body.NewPassword)
+	err := h.svc.ChangePassword(ctx, bearerToken(ctx), req.Body.OldPassword, req.Body.NewPassword)
 	switch {
 	case errors.Is(err, app.ErrUnauthenticated):
 		return publicapi.ChangePassword401JSONResponse(errorBody(err)), nil

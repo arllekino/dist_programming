@@ -32,7 +32,6 @@ type sessionRepository struct {
 
 type record struct {
 	UserID            string    `json:"user_id"`
-	UserAgent         string    `json:"user_agent"`
 	CreatedAt         time.Time `json:"created_at"`
 	ExpiresAt         time.Time `json:"expires_at"`
 	AbsoluteExpiresAt time.Time `json:"absolute_expires_at"`
@@ -155,7 +154,6 @@ func userSessionsKey(userID uuid.UUID) string {
 func encode(s domain.Session) ([]byte, error) {
 	return json.Marshal(record{
 		UserID:            s.UserID.String(),
-		UserAgent:         s.UserAgent,
 		CreatedAt:         s.CreatedAt,
 		ExpiresAt:         s.ExpiresAt,
 		AbsoluteExpiresAt: s.AbsoluteExpiresAt,
@@ -175,7 +173,6 @@ func decode(id string, value []byte) (domain.Session, error) {
 	return domain.Session{
 		ID:                id,
 		UserID:            userID,
-		UserAgent:         rec.UserAgent,
 		CreatedAt:         rec.CreatedAt,
 		ExpiresAt:         rec.ExpiresAt,
 		AbsoluteExpiresAt: rec.AbsoluteExpiresAt,

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"uuid"
 
 	"github.com/stretchr/testify/require"
 
@@ -32,7 +33,8 @@ func TestRegisterCreatesProfileCredentialsAndSession(t *testing.T) {
 			user_id = ?
 	`
 	var hash string
-	err := testEnv.connector.TransactionalClient().GetContext(t.Context(), "test.credentials", &hash, query, user.userID)
+	userID := uuid.MustParse(user.userID)
+	err := testEnv.connector.TransactionalClient().GetContext(t.Context(), "test.credentials", &hash, query, userID[:])
 	require.NoError(t, err)
 	require.NotContains(t, hash, user.password)
 

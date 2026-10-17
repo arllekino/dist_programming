@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 	"uuid"
 
@@ -28,7 +29,7 @@ type credentialsRepository struct {
 }
 
 type credentialsRow struct {
-	UserID            string    `db:"user_id"`
+	UserID            []byte    `db:"user_id"`
 	Login             string    `db:"login"`
 	PasswordHash      string    `db:"password_hash"`
 	CreatedAt         time.Time `db:"created_at"`
@@ -64,7 +65,7 @@ func (repo *credentialsRepository) FindByUserID(userID uuid.UUID) (domain.Creden
 		WHERE
 			user_id = ?
 	`
-	return repo.find("credentials.find_by_user_id", query, userID.String())
+	return repo.find("credentials.find_by_user_id", query, userID[:])
 }
 
 func (repo *credentialsRepository) FindByUserIDForUpdate(userID uuid.UUID) (domain.Credentials, error) {
@@ -81,7 +82,7 @@ func (repo *credentialsRepository) FindByUserIDForUpdate(userID uuid.UUID) (doma
 			user_id = ?
 		FOR UPDATE
 	`
-	return repo.find("credentials.find_by_user_id_for_update", query, userID.String())
+	return repo.find("credentials.find_by_user_id_for_update", query, userID[:])
 }
 
 func (repo *credentialsRepository) find(queryID, query string, arg any) (domain.Credentials, error) {
@@ -93,7 +94,7 @@ func (repo *credentialsRepository) find(queryID, query string, arg any) (domain.
 	if err != nil {
 		return domain.Credentials{}, err
 	}
-	userID, err := uuid.Parse(row.UserID)
+	userID, err := parseUserID(row.UserID)
 	if err != nil {
 		return domain.Credentials{}, err
 	}
@@ -119,7 +120,7 @@ func (repo *credentialsRepository) Create(c domain.Credentials) error {
 		)
 	`
 	_, err := repo.client.ExecContext(repo.ctx, "credentials.create", query,
-		c.UserID.String(),
+		c.UserID[:],
 		string(c.Login),
 		string(c.PasswordHash),
 		c.CreatedAt,
@@ -144,7 +145,7 @@ func (repo *credentialsRepository) Update(c domain.Credentials) error {
 	result, err := repo.client.ExecContext(repo.ctx, "credentials.update", query,
 		string(c.PasswordHash),
 		c.PasswordChangedAt,
-		c.UserID.String(),
+		c.UserID[:],
 	)
 	if err != nil {
 		return err
@@ -157,4 +158,11 @@ func (repo *credentialsRepository) Update(c domain.Credentials) error {
 		return domain.ErrCredentialsNotFound
 	}
 	return nil
+}
+
+func parseUserID(raw []byte) (uuid.UUID, error) {
+	if len(raw) != len(uuid.UUID{}) {
+		return uuid.Nil(), fmt.Errorf("user ID must be %d bytes, got %d", len(uuid.UUID{}), len(raw))
+	}
+	return uuid.UUID(raw), nil
 }

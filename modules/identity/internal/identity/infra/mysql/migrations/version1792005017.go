@@ -26,7 +26,7 @@ func (v version1792005017) Description() string {
 func (v version1792005017) Up(ctx context.Context) error {
 	const query = `
 		CREATE TABLE IF NOT EXISTS users (
-			id CHAR(36) CHARACTER SET ascii NOT NULL PRIMARY KEY,
+			id BINARY(16) NOT NULL PRIMARY KEY,
 			first_name VARCHAR(100) NOT NULL,
 			last_name VARCHAR(100) NOT NULL,
 			email VARCHAR(254) NOT NULL,

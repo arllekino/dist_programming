@@ -22,24 +22,32 @@ func NewLogin(s string) (Login, error) {
 
 const (
 	minPasswordLength = 8
-	maxPasswordBytes  = 72
+	maxPasswordLength = 72
 )
 
 type Password string
 
-func NewPassword(s string) (Password, error) {
-	if len([]rune(s)) < minPasswordLength || len(s) > maxPasswordBytes {
-		return "", ErrInvalidPassword
+func NewPassword(password string) (Password, error) {
+	err := validatePassword(password)
+	if err != nil {
+		return "", err
+	}
+	return Password(password), nil
+}
+
+func validatePassword(password string) error {
+	if len(password) < minPasswordLength || len(password) > maxPasswordLength {
+		return ErrInvalidPassword
 	}
 	var hasLetter, hasDigit bool
-	for _, r := range s {
+	for _, r := range password {
 		hasLetter = hasLetter || unicode.IsLetter(r)
 		hasDigit = hasDigit || unicode.IsDigit(r)
 	}
 	if !hasLetter || !hasDigit {
-		return "", ErrInvalidPassword
+		return ErrInvalidPassword
 	}
-	return Password(s), nil
+	return nil
 }
 
 type PasswordHash string

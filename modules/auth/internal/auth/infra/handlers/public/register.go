@@ -26,7 +26,7 @@ func Register(svc *app.Service, logger *slog.Logger) (runtimehttp.RegisterFunc, 
 	}
 	return func(router chi.Router) error {
 		router.Group(func(router chi.Router) {
-			router.Use(withRequestMeta)
+			router.Use(withBearerToken)
 			router.Use(func(next http.Handler) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					route, params, err := validatorRouter.FindRoute(r)

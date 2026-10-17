@@ -77,8 +77,7 @@ func callContext(t *testing.T) context.Context {
 func createSession(t *testing.T, client internalapi.SessionServiceClient, userID string) *internalapi.CreateSessionResponse {
 	t.Helper()
 	response, err := client.CreateSession(callContext(t), &internalapi.CreateSessionRequest{
-		UserID:    userID,
-		UserAgent: "integration-test",
+		UserID: userID,
 	}, grpc.WaitForReady(true))
 	require.NoError(t, err)
 	require.NotEmpty(t, response.Token)

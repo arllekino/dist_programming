@@ -27,12 +27,11 @@ type sessionClient struct {
 	timeout time.Duration
 }
 
-func (c *sessionClient) Create(ctx context.Context, userID uuid.UUID, userAgent string) (app.Session, error) {
+func (c *sessionClient) Create(ctx context.Context, userID uuid.UUID) (app.Session, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 	response, err := c.client.CreateSession(ctx, &sessionapi.CreateSessionRequest{
-		UserID:    userID.String(),
-		UserAgent: userAgent,
+		UserID: userID.String(),
 	})
 	if err != nil {
 		return app.Session{}, unavailable(sessionService, err)

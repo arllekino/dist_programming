@@ -5,8 +5,6 @@ import (
 	"uuid"
 )
 
-const maxUserAgentLength = 256
-
 type Policy struct {
 	IdleTTL     time.Duration
 	AbsoluteTTL time.Duration
@@ -25,24 +23,19 @@ func NewPolicy(idleTTL, absoluteTTL time.Duration) (Policy, error) {
 type Session struct {
 	ID                string
 	UserID            uuid.UUID
-	UserAgent         string
 	CreatedAt         time.Time
 	ExpiresAt         time.Time
 	AbsoluteExpiresAt time.Time
 }
 
-func NewSession(id string, userID uuid.UUID, userAgent string, now time.Time, policy Policy) (Session, error) {
+func NewSession(id string, userID uuid.UUID, now time.Time, policy Policy) (Session, error) {
 	if userID == uuid.Nil() {
 		return Session{}, ErrInvalidUserID
-	}
-	if runes := []rune(userAgent); len(runes) > maxUserAgentLength {
-		userAgent = string(runes[:maxUserAgentLength])
 	}
 	now = now.UTC()
 	return Session{
 		ID:                id,
 		UserID:            userID,
-		UserAgent:         userAgent,
 		CreatedAt:         now,
 		ExpiresAt:         now.Add(policy.IdleTTL),
 		AbsoluteExpiresAt: now.Add(policy.AbsoluteTTL),

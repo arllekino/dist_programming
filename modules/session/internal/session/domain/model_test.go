@@ -40,20 +40,19 @@ func TestNewSession(t *testing.T) {
 	policy := testPolicy(t)
 	userID := uuid.New()
 
-	session, err := NewSession("id", userID, strings.Repeat("я", 300), testNow, policy)
+	session, err := NewSession("id", userID, testNow, policy)
 	require.NoError(t, err)
 	require.Equal(t, userID, session.UserID)
 	require.Equal(t, testNow, session.CreatedAt)
 	require.Equal(t, testNow.Add(time.Hour), session.ExpiresAt)
 	require.Equal(t, testNow.Add(4*time.Hour), session.AbsoluteExpiresAt)
-	require.Len(t, []rune(session.UserAgent), maxUserAgentLength)
 
-	_, err = NewSession("id", uuid.Nil(), "", testNow, policy)
+	_, err = NewSession("id", uuid.Nil(), testNow, policy)
 	require.ErrorIs(t, err, ErrInvalidUserID)
 }
 
 func TestSessionIsExpired(t *testing.T) {
-	session, err := NewSession("id", uuid.New(), "", testNow, testPolicy(t))
+	session, err := NewSession("id", uuid.New(), testNow, testPolicy(t))
 	require.NoError(t, err)
 
 	require.False(t, session.IsExpired(testNow.Add(time.Hour-time.Nanosecond)))
@@ -76,7 +75,7 @@ func TestSessionTouch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			session, err := NewSession("id", uuid.New(), "", testNow, policy)
+			session, err := NewSession("id", uuid.New(), testNow, policy)
 			require.NoError(t, err)
 
 			require.Equal(t, tt.changed, session.Touch(testNow.Add(tt.at), policy))
@@ -87,7 +86,7 @@ func TestSessionTouch(t *testing.T) {
 
 func TestSessionTouchIsCappedByAbsoluteExpiration(t *testing.T) {
 	policy := testPolicy(t)
-	session, err := NewSession("id", uuid.New(), "", testNow, policy)
+	session, err := NewSession("id", uuid.New(), testNow, policy)
 	require.NoError(t, err)
 
 	now := testNow

@@ -69,7 +69,7 @@ func TestCreateAndValidate(t *testing.T) {
 	svc, repo, _ := newTestService(t)
 	userID := uuid.New()
 
-	token, created, err := svc.Create(userID, "curl")
+	token, created, err := svc.Create(userID)
 	require.NoError(t, err)
 	require.Equal(t, token.SessionID(), created.ID)
 	require.Contains(t, repo.sessions, created.ID)
@@ -79,7 +79,7 @@ func TestCreateAndValidate(t *testing.T) {
 	require.Equal(t, created, validated)
 	require.Zero(t, repo.updates)
 
-	_, _, err = svc.Create(uuid.Nil(), "")
+	_, _, err = svc.Create(uuid.Nil())
 	require.ErrorIs(t, err, ErrInvalidUserID)
 }
 
@@ -96,7 +96,7 @@ func TestValidateRejectsUnknownAndMalformedTokens(t *testing.T) {
 
 func TestValidateSlidesExpiration(t *testing.T) {
 	svc, repo, clock := newTestService(t)
-	token, _, err := svc.Create(uuid.New(), "")
+	token, _, err := svc.Create(uuid.New())
 	require.NoError(t, err)
 
 	clock.now = testNow.Add(40 * time.Minute)
@@ -113,7 +113,7 @@ func TestValidateSlidesExpiration(t *testing.T) {
 
 func TestValidateDeletesExpiredSession(t *testing.T) {
 	svc, repo, clock := newTestService(t)
-	token, _, err := svc.Create(uuid.New(), "")
+	token, _, err := svc.Create(uuid.New())
 	require.NoError(t, err)
 
 	clock.now = testNow.Add(time.Hour)
@@ -125,7 +125,7 @@ func TestValidateDeletesExpiredSession(t *testing.T) {
 func TestRevoke(t *testing.T) {
 	svc, _, _ := newTestService(t)
 	userID := uuid.New()
-	token, _, err := svc.Create(userID, "")
+	token, _, err := svc.Create(userID)
 	require.NoError(t, err)
 
 	revoked, err := svc.Revoke(string(token))
@@ -145,16 +145,16 @@ func TestRevokeUserSessions(t *testing.T) {
 	userID := uuid.New()
 	otherUserID := uuid.New()
 
-	_, first, err := svc.Create(userID, "first")
+	_, first, err := svc.Create(userID)
 	require.NoError(t, err)
-	_, kept, err := svc.Create(userID, "kept")
+	_, kept, err := svc.Create(userID)
 	require.NoError(t, err)
-	_, foreign, err := svc.Create(otherUserID, "foreign")
+	_, foreign, err := svc.Create(otherUserID)
 	require.NoError(t, err)
 
 	changedAt := testNow.Add(time.Minute)
 	clock.now = testNow.Add(2 * time.Minute)
-	_, later, err := svc.Create(userID, "created after password change")
+	_, later, err := svc.Create(userID)
 	require.NoError(t, err)
 
 	revoked, err := svc.RevokeUserSessions(userID, kept.ID, changedAt)
@@ -174,7 +174,7 @@ func TestRevokeUserSessions(t *testing.T) {
 	require.Equal(t, 2, revoked)
 
 	clock.now = testNow.Add(time.Hour + 500*time.Microsecond)
-	_, sameMillisecond, err := svc.Create(userID, "")
+	_, sameMillisecond, err := svc.Create(userID)
 	require.NoError(t, err)
 	revoked, err = svc.RevokeUserSessions(userID, "", testNow.Add(time.Hour))
 	require.NoError(t, err)

@@ -21,7 +21,7 @@ type Session struct {
 }
 
 type SessionClient interface {
-	Create(ctx context.Context, userID uuid.UUID, userAgent string) (Session, error)
+	Create(ctx context.Context, userID uuid.UUID) (Session, error)
 	Validate(ctx context.Context, token string) (Session, error)
 	Revoke(ctx context.Context, token string) (Session, error)
 	RevokeUserSessions(ctx context.Context, userID uuid.UUID, exceptSessionID string, createdBefore time.Time) error

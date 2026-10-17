@@ -12,7 +12,6 @@ service SessionService {
 
 message CreateSessionRequest {
   string UserID = 1;
-  string UserAgent = 2;
 }
 
 message CreateSessionResponse {

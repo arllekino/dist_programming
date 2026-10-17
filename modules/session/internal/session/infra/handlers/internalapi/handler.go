@@ -34,7 +34,7 @@ func (h handler) CreateSession(ctx context.Context, req *sessioninternalapi.Crea
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
-	token, session, err := h.svc.CreateSession(ctx, userID, req.UserAgent)
+	token, session, err := h.svc.CreateSession(ctx, userID)
 	if err != nil {
 		return nil, h.error(ctx, "create session", err)
 	}

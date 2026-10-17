@@ -19,7 +19,7 @@ func TestRedisRepository(t *testing.T) {
 
 	token, err := domain.NewToken()
 	require.NoError(t, err)
-	session, err := domain.NewSession(token.SessionID(), userID, "agent", time.Now(), policy)
+	session, err := domain.NewSession(token.SessionID(), userID, time.Now(), policy)
 	require.NoError(t, err)
 	require.NoError(t, repo.Create(session))
 
@@ -56,7 +56,7 @@ func TestRedisRepositoryCleansStaleIndexEntries(t *testing.T) {
 	for range 2 {
 		token, err := domain.NewToken()
 		require.NoError(t, err)
-		session, err := domain.NewSession(token.SessionID(), userID, "", time.Now(), policy)
+		session, err := domain.NewSession(token.SessionID(), userID, time.Now(), policy)
 		require.NoError(t, err)
 		require.NoError(t, repo.Create(session))
 		ids = append(ids, session.ID)

@@ -20,12 +20,12 @@ func NewSessionService(repo SessionRepository, policy Policy, now func() time.Ti
 	}
 }
 
-func (s *SessionService) Create(userID uuid.UUID, userAgent string) (Token, Session, error) {
+func (s *SessionService) Create(userID uuid.UUID) (Token, Session, error) {
 	token, err := NewToken()
 	if err != nil {
 		return "", Session{}, err
 	}
-	session, err := NewSession(token.SessionID(), userID, userAgent, s.now(), s.policy)
+	session, err := NewSession(token.SessionID(), userID, s.now(), s.policy)
 	if err != nil {
 		return "", Session{}, err
 	}

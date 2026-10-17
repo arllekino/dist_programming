@@ -26,8 +26,8 @@ func NewService(repos RepositoryProvider, policy domain.Policy, now func() time.
 	}
 }
 
-func (s *Service) CreateSession(ctx context.Context, userID uuid.UUID, userAgent string) (domain.Token, domain.Session, error) {
-	return s.sessions(ctx).Create(userID, userAgent)
+func (s *Service) CreateSession(ctx context.Context, userID uuid.UUID) (domain.Token, domain.Session, error) {
+	return s.sessions(ctx).Create(userID)
 }
 
 func (s *Service) ValidateSession(ctx context.Context, token string) (domain.Session, error) {

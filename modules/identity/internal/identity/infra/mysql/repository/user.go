@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 	"uuid"
 
@@ -28,7 +29,7 @@ type userRepository struct {
 }
 
 type userRow struct {
-	ID        string    `db:"id"`
+	ID        []byte    `db:"id"`
 	FirstName string    `db:"first_name"`
 	LastName  string    `db:"last_name"`
 	Email     string    `db:"email"`
@@ -76,14 +77,14 @@ func (repo *userRepository) FindForUpdate(id uuid.UUID) (domain.User, error) {
 
 func (repo *userRepository) find(queryID, query string, id uuid.UUID) (domain.User, error) {
 	var row userRow
-	err := repo.client.GetContext(repo.ctx, queryID, &row, query, id.String())
+	err := repo.client.GetContext(repo.ctx, queryID, &row, query, id[:])
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.User{}, domain.ErrUserNotFound
 	}
 	if err != nil {
 		return domain.User{}, err
 	}
-	userID, err := uuid.Parse(row.ID)
+	userID, err := parseUserID(row.ID)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -115,7 +116,7 @@ func (repo *userRepository) Create(user domain.User) error {
 		)
 	`
 	_, err := repo.client.ExecContext(repo.ctx, "user.create", query,
-		user.ID.String(),
+		user.ID[:],
 		user.Profile.FirstName,
 		user.Profile.LastName,
 		user.Profile.Email,
@@ -148,7 +149,7 @@ func (repo *userRepository) Update(user domain.User) error {
 		user.Profile.Email,
 		string(user.Status),
 		user.UpdatedAt,
-		user.ID.String(),
+		user.ID[:],
 	)
 	if err != nil {
 		return err
@@ -161,4 +162,11 @@ func (repo *userRepository) Update(user domain.User) error {
 		return domain.ErrUserNotFound
 	}
 	return nil
+}
+
+func parseUserID(raw []byte) (uuid.UUID, error) {
+	if len(raw) != len(uuid.UUID{}) {
+		return uuid.Nil(), fmt.Errorf("user ID must be %d bytes, got %d", len(uuid.UUID{}), len(raw))
+	}
+	return uuid.UUID(raw), nil
 }

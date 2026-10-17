@@ -64,7 +64,7 @@ type RegisterResult struct {
 	Session *Session
 }
 
-func (s *Service) Register(ctx context.Context, rawLogin, rawPassword string, profile Profile, userAgent string) (RegisterResult, error) {
+func (s *Service) Register(ctx context.Context, rawLogin, rawPassword string, profile Profile) (RegisterResult, error) {
 	login, err := domain.NewLogin(rawLogin)
 	if err != nil {
 		return RegisterResult{}, err
@@ -98,7 +98,7 @@ func (s *Service) Register(ctx context.Context, rawLogin, rawPassword string, pr
 	}
 
 	result := RegisterResult{UserID: userID}
-	session, err := s.sessions.Create(ctx, userID, userAgent)
+	session, err := s.sessions.Create(ctx, userID)
 	if err != nil {
 		s.logger.WarnContext(ctx, "session after registration failed", logging.Error(err))
 		return result, nil
@@ -107,7 +107,7 @@ func (s *Service) Register(ctx context.Context, rawLogin, rawPassword string, pr
 	return result, nil
 }
 
-func (s *Service) Login(ctx context.Context, rawLogin, password, userAgent string) (Session, error) {
+func (s *Service) Login(ctx context.Context, rawLogin, password string) (Session, error) {
 	credentials, reason, err := s.verify(ctx, rawLogin, password)
 	if err != nil {
 		return Session{}, err
@@ -119,7 +119,7 @@ func (s *Service) Login(ctx context.Context, rawLogin, password, userAgent strin
 		return Session{}, errors.Join(domain.ErrInvalidCredentials, err)
 	}
 
-	session, err := s.sessions.Create(ctx, credentials.UserID, userAgent)
+	session, err := s.sessions.Create(ctx, credentials.UserID)
 	if err != nil {
 		return Session{}, err
 	}
